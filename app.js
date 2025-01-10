@@ -3,7 +3,7 @@ const peer = new Peer();
 
 // Holen Sie sich die Video-Elemente
 const myVideo = document.getElementById('myVideo');
-const peerVideo = document.getElementById('peerVideo');
+const videoContainer = document.getElementById('videoContainer');
 
 // Holen Sie sich die Buttons für Stummschaltung und Videoausschaltung
 const muteBtn = document.getElementById('muteBtn');
@@ -16,7 +16,7 @@ const callIdElement = document.getElementById('callId');
 let localStream;
 let isMuted = false;
 let isVideoOff = false;
-let currentCall; // Variable, um den aktuellen Anruf zu speichern
+let connections = {}; // Zum Speichern der Peer-Verbindungen
 
 // Funktion, um das lokale Video zu starten
 function startVideo() {
@@ -27,14 +27,20 @@ function startVideo() {
 
             // Warten auf eingehende Peer-Verbindungen
             peer.on('call', (call) => {
-                currentCall = call;
+                // Anruf beantworten und den Stream des anderen Peers anzeigen
                 call.answer(stream);
-                call.on('stream', (remoteStream) => {
-                    peerVideo.srcObject = remoteStream;
-                });
+                const videoElement = document.createElement('video');
+                videoElement.srcObject = stream;
+                videoElement.autoplay = true;
+                videoContainer.appendChild(videoElement);
 
-                // Setze die Call-ID, sobald der Anruf angenommen wird
-                callIdElement.textContent = `Call-ID: ${call.peer}`;
+                // Wenn der Stream des anderen Peers eintrifft
+                call.on('stream', (remoteStream) => {
+                    const peerVideoElement = document.createElement('video');
+                    peerVideoElement.srcObject = remoteStream;
+                    peerVideoElement.autoplay = true;
+                    videoContainer.appendChild(peerVideoElement);
+                });
             });
         })
         .catch(err => {
@@ -46,14 +52,19 @@ function startVideo() {
 startCallBtn.addEventListener('click', () => {
     const peerId = prompt('Gib die Peer-ID des anderen Teilnehmers ein:');
     const call = peer.call(peerId, localStream);
-    currentCall = call;
     
-    // Die Call-ID wird angezeigt
-    callIdElement.textContent = `Call-ID: ${call.peer}`;  // Setzt die Call-ID auf der Webseite
+    // Call-ID anzeigen
+    callIdElement.textContent = `Call-ID: ${call.peer}`;
 
     call.on('stream', (remoteStream) => {
-        peerVideo.srcObject = remoteStream;
+        const peerVideoElement = document.createElement('video');
+        peerVideoElement.srcObject = remoteStream;
+        peerVideoElement.autoplay = true;
+        videoContainer.appendChild(peerVideoElement);
     });
+
+    // Verbindung speichern
+    connections[call.peer] = call;
 });
 
 // Mute/Unmute-Funktion
