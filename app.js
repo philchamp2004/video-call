@@ -10,8 +10,8 @@ const muteBtn = document.getElementById('muteBtn');
 const videoBtn = document.getElementById('videoBtn');
 const startCallBtn = document.getElementById('startCall');
 
-// Anzeige-Element für Peer-ID
-const peerIdElement = document.getElementById('peerId');
+// Anzeige-Element für Call-ID
+const callIdElement = document.getElementById('callId');
 
 let localStream;
 let isMuted = false;
@@ -44,13 +44,21 @@ startCallBtn.addEventListener('click', () => {
     call.on('stream', (remoteStream) => {
         peerVideo.srcObject = remoteStream;
     });
+
+    // Die Call-ID wird angezeigt
+    callIdElement.textContent = call.peer;  // Setzt die Call-ID auf der Webseite
 });
 
 // Mute/Unmute-Funktion
 muteBtn.addEventListener('click', () => {
     const audioTracks = localStream.getAudioTracks();
     isMuted = !isMuted;
-    audioTracks.forEach(track => track.enabled = !isMuted);
+    
+    // Audio-Track aktivieren oder deaktivieren
+    audioTracks.forEach(track => {
+        track.enabled = !isMuted;
+    });
+    
     muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
 });
 
@@ -58,14 +66,19 @@ muteBtn.addEventListener('click', () => {
 videoBtn.addEventListener('click', () => {
     const videoTracks = localStream.getVideoTracks();
     isVideoOff = !isVideoOff;
-    videoTracks.forEach(track => track.enabled = !isVideoOff);
+    
+    // Video-Track aktivieren oder deaktivieren
+    videoTracks.forEach(track => {
+        track.enabled = !isVideoOff;
+    });
+    
     videoBtn.textContent = isVideoOff ? 'Turn Video On' : 'Turn Video Off';
 });
 
-// Wenn die Peer-ID generiert wurde, wird sie im Peer-ID-Element angezeigt
+// Wenn die Peer-ID generiert wurde, wird sie im Call-ID-Element angezeigt
 peer.on('open', id => {
     console.log('Meine Peer-ID ist: ' + id);
-    peerIdElement.textContent = id;  // Setzt die Peer-ID auf der Webseite
+    callIdElement.textContent = id;  // Setzt die eigene Peer-ID als Call-ID
 });
 
 // Starte das Video
