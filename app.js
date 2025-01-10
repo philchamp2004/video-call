@@ -1,15 +1,21 @@
 // Initialisiere PeerJS
 const peer = new Peer();
 
-// Zugriff auf das eigene Kamera- und Mikrofon-Stream
-let localStream;
-
 // Holen Sie sich die Video-Elemente
 const myVideo = document.getElementById('myVideo');
 const peerVideo = document.getElementById('peerVideo');
 
+// Holen Sie sich die Buttons für Stummschaltung und Videoausschaltung
+const muteBtn = document.getElementById('muteBtn');
+const videoBtn = document.getElementById('videoBtn');
+const startCallBtn = document.getElementById('startCall');
+
 // Anzeige-Element für Peer-ID
 const peerIdElement = document.getElementById('peerId');
+
+let localStream;
+let isMuted = false;
+let isVideoOff = false;
 
 // Funktion, um das lokale Video zu starten
 function startVideo() {
@@ -32,12 +38,28 @@ function startVideo() {
 }
 
 // Funktion, um den Videoanruf zu starten
-document.getElementById('startCall').addEventListener('click', () => {
+startCallBtn.addEventListener('click', () => {
     const peerId = prompt('Gib die Peer-ID des anderen Teilnehmers ein:');
     const call = peer.call(peerId, localStream);
     call.on('stream', (remoteStream) => {
         peerVideo.srcObject = remoteStream;
     });
+});
+
+// Mute/Unmute-Funktion
+muteBtn.addEventListener('click', () => {
+    const audioTracks = localStream.getAudioTracks();
+    isMuted = !isMuted;
+    audioTracks.forEach(track => track.enabled = !isMuted);
+    muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
+});
+
+// Video ausschalten/einschalten
+videoBtn.addEventListener('click', () => {
+    const videoTracks = localStream.getVideoTracks();
+    isVideoOff = !isVideoOff;
+    videoTracks.forEach(track => track.enabled = !isVideoOff);
+    videoBtn.textContent = isVideoOff ? 'Turn Video On' : 'Turn Video Off';
 });
 
 // Wenn die Peer-ID generiert wurde, wird sie im Peer-ID-Element angezeigt
