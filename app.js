@@ -16,6 +16,7 @@ const callIdElement = document.getElementById('callId');
 let localStream;
 let isMuted = false;
 let isVideoOff = false;
+let currentCall; // Variable, um den aktuellen Anruf zu speichern
 
 // Funktion, um das lokale Video zu starten
 function startVideo() {
@@ -26,10 +27,14 @@ function startVideo() {
 
             // Warten auf eingehende Peer-Verbindungen
             peer.on('call', (call) => {
+                currentCall = call;
                 call.answer(stream);
                 call.on('stream', (remoteStream) => {
                     peerVideo.srcObject = remoteStream;
                 });
+
+                // Setze die Call-ID, sobald der Anruf angenommen wird
+                callIdElement.textContent = `Call-ID: ${call.peer}`;
             });
         })
         .catch(err => {
@@ -41,19 +46,21 @@ function startVideo() {
 startCallBtn.addEventListener('click', () => {
     const peerId = prompt('Gib die Peer-ID des anderen Teilnehmers ein:');
     const call = peer.call(peerId, localStream);
+    currentCall = call;
+    
+    // Die Call-ID wird angezeigt
+    callIdElement.textContent = `Call-ID: ${call.peer}`;  // Setzt die Call-ID auf der Webseite
+
     call.on('stream', (remoteStream) => {
         peerVideo.srcObject = remoteStream;
     });
-
-    // Die Call-ID wird angezeigt
-    callIdElement.textContent = call.peer;  // Setzt die Call-ID auf der Webseite
 });
 
 // Mute/Unmute-Funktion
 muteBtn.addEventListener('click', () => {
     const audioTracks = localStream.getAudioTracks();
     isMuted = !isMuted;
-    
+
     // Audio-Track aktivieren oder deaktivieren
     audioTracks.forEach(track => {
         track.enabled = !isMuted;
@@ -66,7 +73,7 @@ muteBtn.addEventListener('click', () => {
 videoBtn.addEventListener('click', () => {
     const videoTracks = localStream.getVideoTracks();
     isVideoOff = !isVideoOff;
-    
+
     // Video-Track aktivieren oder deaktivieren
     videoTracks.forEach(track => {
         track.enabled = !isVideoOff;
@@ -78,7 +85,7 @@ videoBtn.addEventListener('click', () => {
 // Wenn die Peer-ID generiert wurde, wird sie im Call-ID-Element angezeigt
 peer.on('open', id => {
     console.log('Meine Peer-ID ist: ' + id);
-    callIdElement.textContent = id;  // Setzt die eigene Peer-ID als Call-ID
+    callIdElement.textContent = `Peer-ID: ${id}`;  // Setzt die eigene Peer-ID als Call-ID
 });
 
 // Starte das Video
